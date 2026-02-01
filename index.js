@@ -3,6 +3,7 @@ import fetch from "node-fetch";
 import cors from "cors";
 
 const app = express();
+app.use(cors());
 
 app.get("/", (req, res) => {
   res.send("Agent4Football Translate API attiva");
