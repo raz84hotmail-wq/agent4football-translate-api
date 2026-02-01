@@ -4,21 +4,16 @@ import cors from "cors";
 
 const app = express();
 
-// ✅ CORS: consenti QUALSIASI origin (anche "null" delle WebView)
+/** ✅ CORS OPEN (funziona anche con Origin: null e GoodBarber) */
 app.use(cors({
-  origin: function (origin, callback) {
-    return callback(null, true); // allow all
-  },
+  origin: "*",
   methods: ["GET", "POST", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: false,
-  optionsSuccessStatus: 204
+  allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
-// ✅ Preflight
+/** ✅ Preflight */
 app.options("*", cors());
 
-// Health
 app.get("/", (req, res) => {
   res.send("Agent4Football Translate API attiva");
 });
@@ -51,10 +46,12 @@ app.get("/translate", async (req, res) => {
       return res.status(500).json({ error: data.error.message || "Errore Google Translate" });
     }
 
-    return res.json({ translatedText: data.data.translations[0].translatedText });
+    res.json({
+      translatedText: data.data.translations[0].translatedText
+    });
 
   } catch (err) {
-    return res.status(500).json({ error: "Errore server" });
+    res.status(500).json({ error: "Errore server" });
   }
 });
 
