@@ -3,16 +3,27 @@ import fetch from "node-fetch";
 import cors from "cors";
 
 const app = express();
+
+// ✅ CORS: riflette l'origin (funziona con GoodBarber)
 app.use(cors({
-  origin: "*",
-  methods: ["GET", "POST"]
+  origin: true, // <-- IMPORTANTISSIMO (risponde con l'origin reale)
+  methods: ["GET", "POST", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  optionsSuccessStatus: 204
 }));
+
+// ✅ Preflight per tutte le route
+app.options("*", cors());
 
 app.get("/", (req, res) => {
   res.send("Agent4Football Translate API attiva");
 });
 
 app.get("/translate", async (req, res) => {
+  // ✅ Header extra (ridondanza utile quando le piattaforme rompono cors)
+  res.setHeader("Access-Control-Allow-Origin", req.headers.origin || "*");
+  res.setHeader("Vary", "Origin");
+
   const { text, target } = req.query;
 
   if (!text || !target) {
@@ -30,18 +41,14 @@ app.get("/translate", async (req, res) => {
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          q: text,
-          target,
-          format: "text"
-        })
+        body: JSON.stringify({ q: text, target, format: "text" })
       }
     );
 
     const data = await response.json();
 
     if (data.error) {
-      return res.status(500).json(data.error);
+      return res.status(500).json({ error: data.error.message || "Errore Google Translate" });
     }
 
     res.json({
@@ -53,7 +60,9 @@ app.get("/translate", async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 3000;
+// ✅ Render usa PORT automatico (spesso 10000)
+const PORT = process.env.PORT || 10000;
+
 app.listen(PORT, () => {
   console.log("Server avviato su porta", PORT);
 });
